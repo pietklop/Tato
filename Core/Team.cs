@@ -1,0 +1,113 @@
+﻿using Core.Calc;
+
+namespace Core;
+
+public class Team
+{
+    public string Name { get; }
+    public SortedDictionary<DateOnly, Game> Games { get; set; } = new();
+    public TeamStats Stats { get; set; }
+    public float ExpectedGoalsScoredHome { get; set; }
+    public float ExpectedGoalsScoredAway { get; set; }
+    public float ExpectedGoalsConcededHome { get; set; }
+    public float ExpectedGoalsConcededAway { get; set; }
+    public float ExpectedGoalsScoredTotal { get; set; }
+    public float ExpectedGoalsConcededTotal { get; set; }
+    /// <summary>
+    /// Positive value means team is scoring more than expected recently
+    /// </summary>
+    public float GoalsScoredFormCorrection { get; set; }
+    /// <summary>
+    /// Positive value means team is conceding more than expected recently
+    /// </summary>
+    public float GoalsConcededFormCorrection { get; set; }
+    public float Form => GoalsScoredFormCorrection - GoalsConcededFormCorrection;
+
+    public Team(string name)
+    {
+        Name = name;
+    }
+
+    public void ClearGamesAndStats()
+    {
+        Games.Clear();
+        Stats = null;
+        ExpectedGoalsScoredHome = 0;
+        ExpectedGoalsScoredAway = 0;
+        ExpectedGoalsConcededHome = 0;
+        ExpectedGoalsConcededAway = 0;
+        ExpectedGoalsScoredTotal = 0;
+        ExpectedGoalsConcededTotal = 0;
+    }
+
+    public void CalcStrength(DateOnly? endDate = null)
+    {
+        Stats = new TeamStats(this, Games, endDate);
+        ExpectedGoalsScoredHome = Stats.AvgGoalsScoredHome;
+        ExpectedGoalsScoredAway = Stats.AvgGoalsScoredAway;
+        ExpectedGoalsConcededHome = Stats.AvgGoalsConcededHome;
+        ExpectedGoalsConcededAway = Stats.AvgGoalsConcededAway;
+        ExpectedGoalsScoredTotal = Stats.TotalGoalsScored / (float)(Stats.HomeGames + Stats.AwayGames);
+        ExpectedGoalsConcededTotal = Stats.TotalGoalsConceded / (float)(Stats.HomeGames + Stats.AwayGames);
+    }
+
+    public override string ToString() => $"{Name} (ExGoals: {ExpectedGoalsScoredTotal:F2}/{ExpectedGoalsConcededTotal:F2}) Form:{Form:F2}";
+}
+
+public class TeamStats
+{
+    public Team Team { get; }
+    /// <summary>
+    /// Used games to calculate the stats
+    /// Could contain duplicate games to give more weight to recent games
+    /// </summary>
+    internal List<Game> Games { get; }
+    public DateOnly? EndDate { get; }
+
+    public int HomeGames { get; set; }
+    public int HomeWins { get; set; }
+    public int HomeDraws { get; set; }
+    public int AwayGames { get; set; }
+    public int AwayWins { get; set; }
+    public int AwayDraws { get; set; }
+    public int TotalWins => HomeWins + AwayWins;
+    public int TotalDraws => HomeDraws + AwayDraws;
+    public int GoalsScoredHome { get; set; }
+    public int GoalsScoredAway { get; set; }
+    public int GoalsConcededHome { get; set; }
+    public int GoalsConcededAway { get; set; }
+    public int TotalGoalsScored => GoalsScoredHome + GoalsScoredAway;
+    public int TotalGoalsConceded => GoalsConcededHome + GoalsConcededAway;
+    public float AvgGoalsScoredHome => HomeGames == 0 ? 0 : GoalsScoredHome / (float)HomeGames;
+    public float AvgGoalsConcededHome => HomeGames == 0 ? 0 : GoalsConcededHome / (float)HomeGames;
+    public float AvgGoalsScoredAway => AwayGames == 0 ? 0 : GoalsScoredAway / (float)AwayGames;
+    public float AvgGoalsConcededAway => AwayGames == 0 ? 0 : GoalsConcededAway / (float)AwayGames;
+
+    public TeamStats(Team team, SortedDictionary<DateOnly, Game> games, DateOnly? endDate = null)
+    {
+        Team = team;
+        EndDate = endDate;
+        Games = endDate.HasValue ?
+            games.Where(kv => kv.Key <= endDate).Select(kv => kv.Value).ToList() : [..games.Values];
+
+        foreach (var game in Games)
+        {
+            if (game.HomeTeam == Team)
+            {
+                HomeGames++;
+                GoalsScoredHome += game.GoalsHome;
+                GoalsConcededHome += game.GoalsAway;
+                if (game.Result == GameResult.HomeWin) HomeWins++;
+                if (game.Result == GameResult.Draw) HomeDraws++;
+            }
+            else
+            {
+                AwayGames++;
+                GoalsScoredAway += game.GoalsAway;
+                GoalsConcededAway += game.GoalsHome;
+                if (game.Result == GameResult.AwayWin) AwayWins++;
+                if (game.Result == GameResult.Draw) AwayDraws++;
+            }
+        }
+    }
+}
