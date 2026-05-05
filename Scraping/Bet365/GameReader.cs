@@ -5,7 +5,7 @@ namespace Scraping.Bet365;
 
 public static class GameReader
 {
-    public static List<Game> ReadGames(string fileName, int year)
+    public static List<Game> ReadRawGames(string fileName, int year, DateOnly friday)
     {
         var lines = File.ReadAllLines(fileName);
         var games = new List<Game>();
@@ -88,6 +88,8 @@ public static class GameReader
             }
         }
 
+        ProcessGames(games, friday);
+
         return games;
 
         Team AddOrGetTeam(string name)
@@ -100,6 +102,16 @@ public static class GameReader
             team = new Team(name);
             teams.Add(team);
             return team;
+        }
+    }
+
+    private static void ProcessGames(List<Game> games, DateOnly friday)
+    {
+        foreach (var game in games)
+        {
+            if (game.Date < friday) throw new Exception($"Game date {game.Date} is before the Friday {friday}");
+            if (game.Date > friday.AddDays(4))
+                game.OutOfScope = true;
         }
     }
 

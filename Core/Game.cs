@@ -17,6 +17,12 @@ namespace Core
         /// Is only used to indicate schedule business
         /// </summary>
         public bool OtherLeague { get; set; }
+        /// <summary>
+        /// True in case the game prediction has been made more than 1 week up front
+        /// Maybe interesting to track for future analysis to compare any differences
+        /// Should maybe move to <see cref="BookOdds"/>
+        /// </summary>
+        public bool OutOfScope { get; set; }
 
         public Odd PredictedOdd { get; set; }
         public List<Odd>? BookOdds { get; set; }
