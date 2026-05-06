@@ -2,7 +2,7 @@
 
 namespace Core
 {
-    public class Game
+    public class Game : IEquatable<Game>
     {
         public DateOnly Date { get; }
         public Team HomeTeam { get; set; }
@@ -32,6 +32,15 @@ namespace Core
             Date = date;
             GoalsHome = -1;
             GoalsAway = -1;
+        }
+
+        public Game(DateOnly date, Team homeTeam, Team awayTeam, int goalsHome, int goalsAway)
+        {
+            Date = date;
+            HomeTeam = homeTeam;
+            AwayTeam = awayTeam;
+            GoalsHome = goalsHome;
+            GoalsAway = goalsAway;
         }
 
         public Odd PredictOdds()
@@ -76,6 +85,32 @@ namespace Core
             if (GoalsHome == -1 && BookOdds != null && BookOdds.Any())
                 return $"{Date}: {HomeTeam}-{AwayTeam} {BookOdds[0].Odds[GameResult.HomeWin]:F2}-{BookOdds[0].Odds[GameResult.Draw]:F2}-{BookOdds[0].Odds[GameResult.AwayWin]:F2}  {BookOdds[0].TotalChance:F2}";
             return $"{Date}: {HomeTeam}-{AwayTeam} {GoalsHome}-{GoalsAway}";
+        }
+
+        public bool Equals(Game? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Date.Equals(other.Date) && (HomeTeam == null && other.HomeTeam == null || HomeTeam.Equals(other.HomeTeam)) && (AwayTeam == null && other.AwayTeam == null || AwayTeam.Equals(other.AwayTeam));
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((Game)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Date.GetHashCode();
+                hashCode = (hashCode * 397) ^ HomeTeam.GetHashCode();
+                hashCode = (hashCode * 397) ^ AwayTeam.GetHashCode();
+                return hashCode;
+            }
         }
     }
 }

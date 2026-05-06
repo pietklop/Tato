@@ -2,7 +2,7 @@
 
 namespace Core;
 
-public class Team
+public class Team : IEquatable<Team>
 {
     public string Name { get; }
     public SortedDictionary<DateOnly, Game> Games { get; set; } = new();
@@ -52,6 +52,26 @@ public class Team
     }
 
     public override string ToString() => $"{Name} (ExGoals: {ExpectedGoalsScoredTotal:F2}/{ExpectedGoalsConcededTotal:F2}) Form:{Form:F2}";
+
+    public bool Equals(Team? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Name == other.Name;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((Team)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Name.GetHashCode();
+    }
 }
 
 public class TeamStats
