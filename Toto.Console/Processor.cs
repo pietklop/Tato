@@ -5,9 +5,9 @@ namespace Toto.Console;
 
 public static class Processor
 {
-    public static Season ReadSeason(string fileName)
+    public static Season ReadSeason(int startYear)
     {
-        var lines = ReadFiles.ReadGames(fileName);
+        var lines = ReadFiles.ReadGames(startYear);
 
         return SeasonParser.ParseGames(lines);
     }

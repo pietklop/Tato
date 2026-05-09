@@ -1,11 +1,11 @@
-﻿namespace Toto.Console;
+﻿using Scraping.DataStore;
+
+namespace Toto.Console;
 
 public static class ReadFiles
 {
-    public static string[] ReadGames(string fileName)
+    public static string[] ReadGames(int startYear)
     {
-        string path = @"c:\Projects\Toto\Data\";
-        string pathFile = Path.Combine(path, fileName);
-        return System.IO.File.ReadAllLines(pathFile);
+        return File.ReadAllLines(PathConstants.SeasonGamesFile(startYear));
     }
 }
