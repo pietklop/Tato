@@ -15,6 +15,7 @@ public static class OtherLeagueGames
         foreach (var line in lines)
         {
             var game = GameParser.FromSingleLine(line, teams);
+            game.OtherLeague = true;
             games.Add(game);
         }
 

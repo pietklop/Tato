@@ -7,7 +7,7 @@ public static class OddValidator
     public static List<Odd> SimulateLastSeasonPart(Season season)
     {
         var endDate = DateHelper.DateOfNthWeekOfTheMonthDate(season.StartYear+1,2,2, DayOfWeek.Wednesday);
-        var lastGameDate = season.Games.Last().Date;
+        var lastGameDate = season.Games.CompetitionOnly().Last().Date;
         var predictedOdds = new List<Odd>();
 
         while (endDate < lastGameDate)
@@ -15,7 +15,7 @@ public static class OddValidator
             season.CalculateTeamStrengths(endDate);
             season.CalcFormCorrections();
             var gamesThisWeek = season.Games.Where(g => g.Date > endDate && g.Date <= endDate.AddDays(7)).ToList();
-            foreach (var game in gamesThisWeek)
+            foreach (var game in gamesThisWeek.CompetitionOnly())
             {
                 game.PredictOdds();
                 predictedOdds.Add(game.PredictedOdd);

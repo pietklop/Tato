@@ -51,6 +51,37 @@ public class Team : IEquatable<Team>
         ExpectedGoalsConcededTotal = Stats.TotalGoalsConceded / (float)(Stats.HomeGames + Stats.AwayGames);
     }
 
+    /// <summary>
+    /// Depends on the past game schedule
+    /// 1 means team had enough rest
+    /// </summary>
+    public float CalculatePhysicalFitness(DateOnly gameDate)
+    {
+        var previousGameDates = Games.Where(g => g.Key >= gameDate.AddDays(-10) && g.Key < gameDate)
+            .Select(g => (DateOnly)g.Key).OrderBy(d => d).ToList();
+
+        if (previousGameDates.Count == 0) return 1;
+
+        const float fitnessAfterGame = 0.95f;
+        var fitness = 1f;
+
+        if (previousGameDates.Count > 1)
+            ;
+
+        foreach (var date in previousGameDates)
+        {
+            var followUpGame = previousGameDates.Any(d => d > date) ? previousGameDates.First(d => d > date) : gameDate;
+            var daysAGo = (followUpGame.ToDateTime(TimeOnly.MinValue) - date.ToDateTime(TimeOnly.MinValue)).Days;
+            var correction = Fitness(daysAGo);
+            fitness *= correction;
+        }
+
+        return fitness;
+
+        // exponential recovery
+        float Fitness(int daysOfRest) => (float)Math.Exp((fitnessAfterGame-1) / daysOfRest);
+    }
+
     public override string ToString() => $"{Name} (ExGoals: {ExpectedGoalsScoredTotal:F2}/{ExpectedGoalsConcededTotal:F2}) Form:{Form:F2}";
 
     public bool Equals(Team? other)

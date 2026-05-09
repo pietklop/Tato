@@ -5,8 +5,8 @@ namespace Core
     public class Game : IEquatable<Game>
     {
         public DateOnly Date { get; }
-        public Team HomeTeam { get; set; }
-        public Team AwayTeam { get; set; }
+        public Team? HomeTeam { get; set; }
+        public Team? AwayTeam { get; set; }
         public int GoalsHome { get; set; }
         public int GoalsAway { get; set; }
         public float ExpectedGoalsHome { get; set; }
@@ -59,6 +59,11 @@ namespace Core
                 ExpectedGoalsHome = (HomeTeam.ExpectedGoalsScoredHome + AwayTeam.ExpectedGoalsConcededAway) / 2;
                 ExpectedGoalsAway = (AwayTeam.ExpectedGoalsScoredAway + HomeTeam.ExpectedGoalsConcededHome) / 2;
             }
+            // var homeFitness = HomeTeam.CalculatePhysicalFitness(Date);
+            // var awayFitness = AwayTeam.CalculatePhysicalFitness(Date);
+            // var fitnessBalance = homeFitness / awayFitness;
+            // ExpectedGoalsHome *= fitnessBalance;
+            // ExpectedGoalsAway /= fitnessBalance;
 
             var dict = OddCalculator.CalcChances(ExpectedGoalsHome, ExpectedGoalsAway);
             PredictedOdd = new Odd(this, [dict[GameResult.HomeWin], dict[GameResult.Draw], dict[GameResult.AwayWin]]);

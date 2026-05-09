@@ -14,8 +14,9 @@ public class Season
         StartYear = startYear;
         Games = games;
         Teams = teams;
-
     }
+
+    public void AddOtherLeagueMatches(List<Game> games) => Games.AddRange(games);
 
     public void CalculateTeamStrengths(DateOnly endDate)
     {
@@ -24,8 +25,8 @@ public class Season
         // assign games to teams
         foreach (var game in Games)
         {
-            game.HomeTeam.Games.Add(game.Date, game);
-            game.AwayTeam.Games.Add(game.Date, game);
+            game.HomeTeam?.Games.TryAdd(game.Date, game);
+            game.AwayTeam?.Games.TryAdd(game.Date, game);
         }
 
         //Validate();

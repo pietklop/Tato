@@ -1,4 +1,5 @@
 ﻿using Core;
+using Scraping.DataStore;
 using Scraping.FcUpdate;
 
 namespace Toto.Console;
@@ -9,6 +10,11 @@ public static class Processor
     {
         var lines = ReadFiles.ReadGames(startYear);
 
-        return SeasonParser.ParseGames(lines);
+        var season = SeasonParser.ParseGames(lines);
+
+        var games = OtherLeagueGames.Read(startYear);
+        season.AddOtherLeagueMatches(games);
+
+        return season;
     }
 }
