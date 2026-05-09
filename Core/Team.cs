@@ -1,4 +1,5 @@
 ﻿using Core.Calc;
+using Core.Prediction;
 
 namespace Core;
 
@@ -62,7 +63,7 @@ public class Team : IEquatable<Team>
 
         if (previousGameDates.Count == 0) return 1;
 
-        const float fitnessAfterGame = 0.95f;
+        Parameters.PhysicalFitness.FitnessAfterGame = 0.95f;
         var fitness = 1f;
 
         if (previousGameDates.Count > 1)
@@ -79,7 +80,7 @@ public class Team : IEquatable<Team>
         return fitness;
 
         // exponential recovery
-        float Fitness(int daysOfRest) => (float)Math.Exp((fitnessAfterGame-1) / daysOfRest);
+        float Fitness(int daysOfRest) => (float)Math.Exp((Parameters.PhysicalFitness.FitnessAfterGame -1) / daysOfRest);
     }
 
     public override string ToString() => $"{Name} (ExGoals: {ExpectedGoalsScoredTotal:F2}/{ExpectedGoalsConcededTotal:F2}) Form:{Form:F2}";
@@ -141,6 +142,7 @@ public class TeamStats
         Games = endDate.HasValue ?
             games.Where(kv => kv.Key <= endDate).Select(kv => kv.Value).ToList() : [..games.Values];
 
+        Games = Games.CompetitionOnly();
         foreach (var game in Games)
         {
             if (game.HomeTeam == Team)

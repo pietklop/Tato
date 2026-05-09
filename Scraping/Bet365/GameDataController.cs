@@ -16,12 +16,12 @@ public static class GameDataController
 
             DateOnly friday = GetFridayFromWeek(year, wkNr);
 
-            GameReader.ReadRawGames(file, year, friday);
+            GameReader.ReadRawGames(file, friday);
             File.Move(file, Path.Combine(rawFolder, "Processed", Path.GetFileName(file)));
         }
     }
 
-    private static DateOnly GetFridayFromWeek(int year, int weekNumber)
+    public static DateOnly GetFridayFromWeek(int year, int weekNumber)
     {
         var date = System.Globalization.ISOWeek.ToDateTime(year, weekNumber, DayOfWeek.Friday);
         return DateOnly.FromDateTime(date);

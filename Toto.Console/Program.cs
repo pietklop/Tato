@@ -2,6 +2,7 @@
 
 using Core;
 using Core.Calc;
+using Core.Prediction;
 using Scraping.Bet365;
 using Scraping.DataStore;
 using Scraping.FcUpdate;
@@ -19,6 +20,7 @@ void ShowMenu()
         Console.WriteLine("=== Main Menu ===");
         Console.WriteLine("1. Scrape Team Schedules");
         Console.WriteLine("2. Calculate Season Benchmark");
+        Console.WriteLine("3. Predict");
         Console.WriteLine("0. Exit");
         Console.WriteLine();
         Console.Write("Select an option: ");
@@ -35,6 +37,9 @@ void ShowMenu()
             case '2':
                 CalculateSeasonBenchmark();
                 break;
+            case '3':
+                Predict(2025);
+                break;
             case '0':
                 return;
             default:
@@ -44,6 +49,25 @@ void ShowMenu()
 
         Console.WriteLine();
     }
+}
+
+void Predict(int startYear)
+{
+    var season = Processor.ReadSeason(2025);
+    var predictedOdds = OddValidator.SimulateLastSeasonPart(season);
+    var wkNr = 7;
+    var bet365Games = new List<Game>();
+    for (int i = wkNr; i < 20; i++)
+    {
+        bet365Games.AddRange(GameReader.ReadRawGames(PathConstants.Bet365WeekOdds(2025, i), GameDataController.GetFridayFromWeek(2026, i)));
+    }
+    var gameSelector = new GameSelector(predictedOdds, bet365Games);
+    var bets = gameSelector.SelectGames();
+
+    var totalStake = bets.Sum(b => b.Stake);
+    var totalProfit = bets.Sum(b => b.Profit);
+    Console.WriteLine($"{bets.Count(b => b.Profit > 0)} wins of {bets.Count} bets.");
+    Console.WriteLine($"Total stake:{totalStake:F2} Total profit: {totalProfit:F2}  {totalProfit / totalStake:P0}");
 }
 
 void ScrapeTeamSchedules()

@@ -5,8 +5,9 @@ namespace Scraping.Bet365;
 
 public static class GameReader
 {
-    public static List<Game> ReadRawGames(string fileName, int year, DateOnly friday)
+    public static List<Game> ReadRawGames(string fileName, DateOnly friday, bool currentWeekendOnly = true)
     {
+        if (!File.Exists(fileName)) return new List<Game>();
         var lines = File.ReadAllLines(fileName);
         var games = new List<Game>();
         var oddsDict = new Dictionary<Game, float[]>();
@@ -20,7 +21,7 @@ public static class GameReader
         {
             var line = lines[i];
             if (!line.HasContent()) continue;
-            var d = TryParseDate(line, year);
+            var d = TryParseDate(line, friday.Year);
             if (d != null) // new date line
                 step = ParseSequence.Date;
 
@@ -42,6 +43,8 @@ public static class GameReader
                         game = new Game(gameDate);
                         games.Add(game);
                     }
+                    else if (IsSingleDigitBetBoost(line))
+                        break;
                     else
                     {
                         game.HomeTeam = AddOrGetTeam(line);
@@ -89,6 +92,8 @@ public static class GameReader
         }
 
         ProcessGames(games, friday);
+        if (currentWeekendOnly)
+            games = games.Where(g => !g.OutOfScope).ToList();
 
         return games;
 
@@ -104,6 +109,8 @@ public static class GameReader
             return team;
         }
     }
+
+    private static bool IsSingleDigitBetBoost(string line) => line.Length == 1 && int.TryParse(line, out _);
 
     private static void ProcessGames(List<Game> games, DateOnly friday)
     {
@@ -141,7 +148,7 @@ public static class GameReader
     {
         ["jan"] = 1,
         ["feb"] = 2,
-        ["maa"] = 3,
+        ["mrt"] = 3,
         ["apr"] = 4,
         ["mei"] = 5,
         ["jun"] = 6,

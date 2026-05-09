@@ -5,8 +5,11 @@ public static class PathConstants
     private const string BasePath = @"c:\Projects\Toto\Data";
 
     public static string SeasonBase(int startYear) => Path.Combine(BasePath, $"Season{startYear % 1000}");
+    public static string SeasonBaseBet365(int startYear) => Path.Combine(SeasonBase(startYear), "Bet365", "Raw");
 
     public static string SeasonGamesFile(int startYear) => Path.Combine(SeasonBase(startYear), "Eredivisie.txt");
+
+    public static string Bet365WeekOdds(int startYear, int weekNr) => Path.Combine(SeasonBaseBet365(startYear), $"wk{weekNr:D2}.txt");
 
     public static string OtherLeagueMatchesFile(int startYear)
     {

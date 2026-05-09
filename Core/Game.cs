@@ -1,4 +1,5 @@
 ﻿using Core.Calc;
+using Core.Prediction;
 
 namespace Core
 {
@@ -50,20 +51,22 @@ namespace Core
             if (OtherLeague) throw new Exception("Game is from another league");
 
 
-            if (FormCalculations.Enabled)
-            {
+            if (Parameters.Form.IsEnabled)
                 this.PredictFormCorrectedOdds();
-            }
             else
             {
                 ExpectedGoalsHome = (HomeTeam.ExpectedGoalsScoredHome + AwayTeam.ExpectedGoalsConcededAway) / 2;
                 ExpectedGoalsAway = (AwayTeam.ExpectedGoalsScoredAway + HomeTeam.ExpectedGoalsConcededHome) / 2;
             }
-            // var homeFitness = HomeTeam.CalculatePhysicalFitness(Date);
-            // var awayFitness = AwayTeam.CalculatePhysicalFitness(Date);
-            // var fitnessBalance = homeFitness / awayFitness;
-            // ExpectedGoalsHome *= fitnessBalance;
-            // ExpectedGoalsAway /= fitnessBalance;
+
+            if (Parameters.PhysicalFitness.IsEnabled)
+            {
+                var homeFitness = HomeTeam.CalculatePhysicalFitness(Date);
+                var awayFitness = AwayTeam.CalculatePhysicalFitness(Date);
+                var fitnessBalance = homeFitness / awayFitness;
+                ExpectedGoalsHome *= fitnessBalance;
+                ExpectedGoalsAway /= fitnessBalance;
+            }
 
             var dict = OddCalculator.CalcChances(ExpectedGoalsHome, ExpectedGoalsAway);
             PredictedOdd = new Odd(this, [dict[GameResult.HomeWin], dict[GameResult.Draw], dict[GameResult.AwayWin]]);
