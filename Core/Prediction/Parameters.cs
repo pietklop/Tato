@@ -8,6 +8,8 @@ public static class Parameters
     /// The higher, the less bets, so less reliable
     /// </summary>
     public const float MinChanceFactor = 1.3f;
+
+    public static BetStrategy BetStrategy = BetStrategy.Kelly;
     public static Form Form = new Form();
     public static PhysicalFitness PhysicalFitness = new PhysicalFitness();
 }
@@ -36,4 +38,12 @@ public class PhysicalFitness
 {
     public bool IsEnabled = false;
     public float FitnessAfterGame = 0.95f;
+}
+
+public enum BetStrategy
+{
+    None,
+    Flat,
+    PredictionGap,
+    Kelly,
 }

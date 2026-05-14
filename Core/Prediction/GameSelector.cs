@@ -39,8 +39,26 @@ public class GameSelector
             var factor = predictedGame.Chances[prediction] / bookMakerGame.BookOdds[0].Chances[prediction];
             if (factor < Parameters.MinChanceFactor)
                 return;
-            if (bestBet == null || factor > bestBet.PredictedOdd.Chances[bestBet.Prediction] / bestBet.BookmakersGame.BookOdds[0].Chances[bestBet.Prediction])
-                bestBet = new Bet(predictedGame, bookMakerGame, prediction, factor / Parameters.MinChanceFactor);
+            if (bestBet == null || factor > bestBet.PredictedOdd.Chances[bestBet.Prediction] /
+                bestBet.BookmakersGame.BookOdds[0].Chances[bestBet.Prediction])
+            {
+                switch (Parameters.BetStrategy)
+                {
+                    case BetStrategy.Flat:
+                        bestBet = new Bet(predictedGame, bookMakerGame, prediction, 1);
+                        break;
+                    case BetStrategy.PredictionGap:
+                        bestBet = new Bet(predictedGame, bookMakerGame, prediction, factor);
+                        break;
+                    case BetStrategy.Kelly:
+                        bestBet = new Bet(predictedGame, bookMakerGame, prediction, KellyBetSize(predictedGame.Chances[prediction], bookMakerGame.BookOdds[0].Chances[prediction]));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
         }
+
+        float KellyBetSize(float p, float odd) => (p * odd - 1) / (odd - 1);
     }
 }
