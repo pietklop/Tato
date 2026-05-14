@@ -8,6 +8,8 @@ public static class Parameters
     /// The higher, the less bets, so less reliable
     /// </summary>
     public const float MinChanceFactor = 1.3f;
+    public const float MinChanceDiff = 0.1f;
+    public const bool UseAbsoluteChanceDiff = false;
 
     public static BetStrategy BetStrategy = BetStrategy.Kelly;
     public static Form Form = new Form();

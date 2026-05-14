@@ -36,11 +36,22 @@ public class GameSelector
 
         void TryAddBet(ref Bet? bestBet, Odd predictedGame, Game bookMakerGame, GameResult prediction)
         {
-            var factor = predictedGame.Chances[prediction] / bookMakerGame.BookOdds[0].Chances[prediction];
-            if (factor < Parameters.MinChanceFactor)
-                return;
-            if (bestBet == null || factor > bestBet.PredictedOdd.Chances[bestBet.Prediction] /
-                bestBet.BookmakersGame.BookOdds[0].Chances[bestBet.Prediction])
+            float diff = 0f;
+            float factor = 0f;
+            if (Parameters.UseAbsoluteChanceDiff)
+            {
+                diff = predictedGame.Chances[prediction] - bookMakerGame.BookOdds[0].Chances[prediction];
+                if (diff < Parameters.MinChanceDiff)
+                    return;
+            }
+            else
+            {
+                factor = predictedGame.Chances[prediction] / bookMakerGame.BookOdds[0].Chances[prediction];
+                if (factor < Parameters.MinChanceFactor)
+                    return;
+            }
+
+            if (bestBet == null || FactorImprovement(factor, bestBet) || DiffImprovement(diff, bestBet))
             {
                 switch (Parameters.BetStrategy)
                 {
@@ -48,7 +59,7 @@ public class GameSelector
                         bestBet = new Bet(predictedGame, bookMakerGame, prediction, 1);
                         break;
                     case BetStrategy.PredictionGap:
-                        bestBet = new Bet(predictedGame, bookMakerGame, prediction, factor);
+                        bestBet = new Bet(predictedGame, bookMakerGame, prediction, Parameters.UseAbsoluteChanceDiff ? diff : factor);
                         break;
                     case BetStrategy.Kelly:
                         bestBet = new Bet(predictedGame, bookMakerGame, prediction, KellyBetSize(predictedGame.Chances[prediction], bookMakerGame.BookOdds[0].Chances[prediction]));
@@ -60,5 +71,19 @@ public class GameSelector
         }
 
         float KellyBetSize(float p, float odd) => (p * odd - 1) / (odd - 1);
+
+        bool FactorImprovement(float factor, Bet bestBet)
+        {
+            if (Parameters.UseAbsoluteChanceDiff) return false;
+            return factor > bestBet.PredictedOdd.Chances[bestBet.Prediction] /
+                bestBet.BookmakersGame.BookOdds[0].Chances[bestBet.Prediction];
+        }
+
+        bool DiffImprovement(float diff, Bet bestBet)
+        {
+            if (!Parameters.UseAbsoluteChanceDiff) return false;
+            return diff > bestBet.PredictedOdd.Chances[bestBet.Prediction] -
+                bestBet.BookmakersGame.BookOdds[0].Chances[bestBet.Prediction];
+        }
     }
 }
