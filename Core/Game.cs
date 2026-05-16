@@ -46,10 +46,7 @@ namespace Core
 
         public Odd PredictOdds()
         {
-            if (HomeTeam.Name.StartsWith("Hee") && AwayTeam.Name.StartsWith("PSV") && Date.Year == 2024)
-                ;
             if (OtherLeague) throw new Exception("Game is from another league");
-
 
             if (Parameters.Form.IsEnabled)
                 this.PredictFormCorrectedOdds();
