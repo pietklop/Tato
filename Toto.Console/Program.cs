@@ -20,7 +20,8 @@ void ShowMenu()
         Console.WriteLine("=== Main Menu ===");
         Console.WriteLine("1. Scrape Team Schedules");
         Console.WriteLine("2. Calculate Season Benchmark");
-        Console.WriteLine("3. Predict");
+        Console.WriteLine("3. Analyze Season");
+        Console.WriteLine("4. Predict Next Round");
         Console.WriteLine("0. Exit");
         Console.WriteLine();
         Console.Write("Select an option: ");
@@ -38,7 +39,10 @@ void ShowMenu()
                 CalculateSeasonBenchmark();
                 break;
             case '3':
-                Predict(2025);
+                AnalyzeSeason(2025);
+                break;
+            case '4':
+                PredictNextRound();
                 break;
             case '0':
                 return;
@@ -51,23 +55,57 @@ void ShowMenu()
     }
 }
 
-void Predict(int startYear)
+void AnalyzeSeason(int startYear)
 {
     var season = Processor.ReadSeason(2025);
     var predictedOdds = OddValidator.SimulateLastSeasonPart(season);
     var wkNr = 7;
     var bet365Games = new List<Game>();
-    for (int i = wkNr; i < 20; i++)
-    {
-        bet365Games.AddRange(GameReader.ReadRawGames(PathConstants.Bet365WeekOdds(2025, i), GameDataController.GetFridayFromWeek(2026, i)));
-    }
+    for (int i = wkNr; i < 20; i++) bet365Games.AddRange(GameReader.ReadRawGames(PathConstants.Bet365WeekOdds(2025, i), GameDataController.GetFridayFromWeek(2026, i)));
     var gameSelector = new GameSelector(predictedOdds, bet365Games);
-    var bets = gameSelector.SelectGames();
+    var bets = gameSelector.SelectFromPlayedGames();
 
     var totalStake = bets.Sum(b => b.Stake);
     var totalProfit = bets.Sum(b => b.Profit);
     Console.WriteLine($"{bets.Count(b => b.Profit > 0)} wins of {bets.Count} bets.");
     Console.WriteLine($"Total stake:{totalStake:F2} Total profit: {totalProfit:F2}  {totalProfit / totalStake:P0}");
+    var homeBets = bets.Where(b => b.Prediction == GameResult.HomeWin).ToList();
+    var awayBets = bets.Where(b => b.Prediction == GameResult.AwayWin).ToList();
+    Console.WriteLine($"Home bets won: {homeBets.Count(b => b.Profit > 0)} of {homeBets.Count} {homeBets.Sum(b => b.Profit):F2}  {homeBets.Sum(b => b.Profit) / homeBets.Sum(b => b.Stake):P0}");
+    Console.WriteLine($"Away bets won: {awayBets.Count(b => b.Profit > 0)} of {awayBets.Count} {awayBets.Sum(b => b.Profit):F2}  {awayBets.Sum(b => b.Profit) / awayBets.Sum(b => b.Stake):P0}");
+
+    Console.Write("Press 'p' to list the games");
+    var key = Console.ReadKey(intercept: true);
+    switch (key.KeyChar)
+    {
+        case 'p':
+            PrintBets(bets);
+            break;
+    }
+}
+
+void PredictNextRound()
+{
+    var startYear = 2025;
+    var wkNr = 20;
+    var season = Processor.ReadSeason(startYear);
+    var predictedOdds = OddValidator.SimulateLastSeasonPart(season);
+    var bet365Games = new List<Game>();
+
+    bet365Games.AddRange(GameReader.ReadRawGames(PathConstants.Bet365WeekOdds(startYear, wkNr), GameDataController.GetFridayFromWeek(2026, wkNr)));
+    var gameSelector = new GameSelector(predictedOdds, bet365Games);
+    var bets = gameSelector.SelectGames(season);
+    Console.WriteLine($"Selected {bets.Count} out of {bet365Games.Count} games.");
+    PrintBets(bets);
+}
+
+void PrintBets(List<Bet> bets)
+{
+    foreach (var bet in bets)
+    {
+        Console.WriteLine(bet.PrintPreBetInfo());
+        //Console.WriteLine(bet.PrintOdds());
+    }
 }
 
 void ScrapeTeamSchedules()

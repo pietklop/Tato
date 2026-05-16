@@ -62,7 +62,8 @@ public class Odd
         TotalChance = chances[0] + chances[1] + chances[2];
 
         Validate([1 / chances[0], 1 / chances[1], 1 / chances[2]]);
-        ResultChance = Chances[Game.Result];
+        if (Game.Result != GameResult.None)
+            ResultChance = Chances[Game.Result];
     }
 
     public float GetPredictionScore()
@@ -78,6 +79,7 @@ public class Odd
         foreach (var odd in odds)
         {
             if (odd <= 1) throw new ArgumentException($"{Game} Odd must be larger than 1");
+            if (odd > 100) throw new ArgumentException($"{Game} Odd must be smaller than 100");
         }
 
         if (Bookmaker == null)
