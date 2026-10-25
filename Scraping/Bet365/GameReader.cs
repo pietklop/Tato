@@ -9,6 +9,102 @@ public static class GameReader
     {
         if (!File.Exists(fileName)) return new List<Game>();
         var lines = File.ReadAllLines(fileName);
+
+        if (friday < new DateOnly(2026, 7, 1)) return ReadGames25(friday, currentWeekendOnly, lines);
+        return ReadGames(friday, currentWeekendOnly, lines);
+    }
+
+    private static List<Game> ReadGames(DateOnly friday, bool currentWeekendOnly, string[] lines)
+    {
+        var games = new List<Game>();
+        var odds = new float[3];
+        var teams = new HashSet<Team>();
+        var step = ParseSequence.Date;
+        Game game = null;
+        DateOnly gameDate = DateOnly.MinValue;
+
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i];
+            if (!line.HasContent()) continue;
+            var d = TryParseDate(line, friday.Year);
+            if (d != null) // new date line
+                step = ParseSequence.Date;
+
+            switch (step)
+            {
+                case ParseSequence.Date:
+                    if (d == null) continue;
+                    gameDate = d.Value;
+                    step = ParseSequence.HomeTeam;
+                    break;
+                case ParseSequence.HomeTeam:
+                    if (line == "1") // odds header
+                    {
+                        i += 2;
+                        break;
+                    }
+                    if (IsTime(line))
+                    {
+                        game = new Game(gameDate);
+                        games.Add(game);
+                    }
+                    else
+                    {
+                        if (game.HomeTeam != null) throw new Exception("Home team is already set");
+                        game.HomeTeam = AddOrGetTeam(line);
+                        step = ParseSequence.AwayTeam;
+                    }
+                    break;
+                case ParseSequence.AwayTeam:
+                    if (game.HomeTeam == null) throw new Exception("Home team not set before away team");
+                    game.AwayTeam = AddOrGetTeam(line);
+                    step = ParseSequence.HomeWinOdds;
+                    break;
+                case ParseSequence.HomeWinOdds:
+                    if (IsSingleDigitBetBoost(line))
+                        break;
+                    var odd = ParseToFloat(line);
+                    odds[0] = odd;
+                    step = ParseSequence.DrawOdds;
+                    break;
+                case ParseSequence.DrawOdds:
+                    odd = ParseToFloat(line);
+                    odds[1] = odd;
+                    step = ParseSequence.AwayWinOdds;
+                    break;
+                case ParseSequence.AwayWinOdds:
+                    odd = ParseToFloat(line);
+                    odds[2] = odd;
+                    if (game.BookOdds != null) throw new Exception("Odds already set for game");
+                    game.BookOdds = [new Odd(bookmaker, game, odds)];
+                    step = ParseSequence.HomeTeam;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        ProcessGames(games, friday);
+        if (currentWeekendOnly)
+            games = games.Where(g => !g.OutOfScope).ToList();
+        return games;
+
+        Team AddOrGetTeam(string name)
+        {
+            name = TeamAliases.FindName(name);
+            var team = teams.FirstOrDefault(t => t.Name == name);
+            if (team != null)
+                return team;
+
+            team = new Team(name);
+            teams.Add(team);
+            return team;
+        }
+    }
+
+    private static List<Game> ReadGames25(DateOnly friday, bool currentWeekendOnly, string[] lines)
+    {
         var games = new List<Game>();
         var oddsDict = new Dictionary<Game, float[]>();
         var teams = new HashSet<Team>();
@@ -94,7 +190,6 @@ public static class GameReader
         ProcessGames(games, friday);
         if (currentWeekendOnly)
             games = games.Where(g => !g.OutOfScope).ToList();
-
         return games;
 
         Team AddOrGetTeam(string name)
