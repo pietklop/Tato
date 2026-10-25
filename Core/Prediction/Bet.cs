@@ -29,7 +29,8 @@ public class Bet
     public string PrintPreBetInfo()
     {
         var game = PredictedOdd.Game;
-        return $"{game.HomeTeam.Name}-{game.AwayTeam.Name} Me:{Prediction} {PredictedOdd.Chances[Prediction]:P0}/{BookmakersGame.BookOdds[0].Chances[Prediction]:P0} Odd:{BookmakersGame.BookOdds[0].Odds[Prediction]:F2} ({PredictedOdd.Game.ExpectedGoalsHome:F1}-{PredictedOdd.Game.ExpectedGoalsAway:F1})";
+        var factor = PredictedOdd.Chances[Prediction] / BookmakersGame.BookOdds[0].Chances[Prediction];
+        return $"{game.HomeTeam.Name}-{game.AwayTeam.Name} Me:{Prediction} {PredictedOdd.Chances[Prediction]:P0}/{BookmakersGame.BookOdds[0].Chances[Prediction]:P0}({factor:F2}) Odd:{BookmakersGame.BookOdds[0].Odds[Prediction]:F2} ({PredictedOdd.Game.ExpectedGoalsHome:F1}-{PredictedOdd.Game.ExpectedGoalsAway:F1})";
     }
 
     public string PrintOdds()
