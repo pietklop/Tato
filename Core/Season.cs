@@ -1,4 +1,6 @@
-﻿namespace Core;
+﻿using System.Text;
+
+namespace Core;
 
 public class Season
 {
@@ -62,5 +64,19 @@ public class Season
                     throw new Exception($"Invalid number of matches {n} between {b} and {a}. Expected 1.");
             }
         }
+    }
+
+    public string GetSeasonSummary()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"Season {StartYear}/{StartYear + 1}");
+        sb.AppendLine($"Total games: {Games.Count} Rounds: {Games.Count/(Teams.Count/2)}");
+        sb.AppendLine($"Home wins: {HomeWins:P2}, Draws: {Draws:P2}, Away wins: {AwayWins:P2}");
+        sb.AppendLine("Teams:");
+        foreach (var team in Teams.OrderByDescending(t => t.Strength))
+        {
+            sb.AppendLine($"{team.Name}: Strength={team.Strength:F2}, Form={team.Form:F2}, Expected Goals Scored={team.ExpectedGoalsScoredTotal:F2}, Expected Goals Conceded={team.ExpectedGoalsConcededTotal:F2}");
+        }
+        return sb.ToString();
     }
 }
