@@ -14,6 +14,7 @@ public class Team : IEquatable<Team>
     public float ExpectedGoalsConcededAway { get; set; }
     public float ExpectedGoalsScoredTotal { get; set; }
     public float ExpectedGoalsConcededTotal { get; set; }
+    public float Strength { get; private set; }
     /// <summary>
     /// Positive value means team is scoring more than expected recently
     /// </summary>
@@ -50,6 +51,7 @@ public class Team : IEquatable<Team>
         ExpectedGoalsConcededAway = Stats.AvgGoalsConcededAway;
         ExpectedGoalsScoredTotal = Stats.TotalGoalsScored / (float)(Stats.HomeGames + Stats.AwayGames);
         ExpectedGoalsConcededTotal = Stats.TotalGoalsConceded / (float)(Stats.HomeGames + Stats.AwayGames);
+        Strength = ExpectedGoalsScoredTotal - ExpectedGoalsConcededTotal;
     }
 
     /// <summary>
